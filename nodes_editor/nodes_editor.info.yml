@@ -1,0 +1,5 @@
+name: Nodes editor
+type: module
+description: Provides a simple nodes edition options
+core: 8.x
+package: Custom

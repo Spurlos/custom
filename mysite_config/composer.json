@@ -1,0 +1,6 @@
+{
+  "name": "drupal/mysite_config",
+  "description": "This is a simple composer.json for mysite_config module.",
+  "type": "drupal-module",
+  "license": "GPL-2.0+"
+}

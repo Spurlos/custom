@@ -1,0 +1,15 @@
+nodes_editor.form:
+  path: '/admin/config/nodes_editor/form'
+  defaults:
+    _title: 'Nodes Editor Form'
+    _form: '\Drupal\nodes_editor\Form\NodeEdit'
+  requirements:
+    _permission: 'access administration pages'
+
+nodes_editor.delete:
+  path: '/admin/config/nodes_editor/delete/{nid}'
+  defaults:
+    _title: 'Delete Content'
+    _form: '\Drupal\nodes_editor\Form\NodeDelete'
+  requirements:
+    _permission: 'access administration pages'

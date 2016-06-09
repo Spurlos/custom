@@ -1,0 +1,6 @@
+name: My Site Configuration Module
+description: Add a simple form for site name and maitenance mode configuration.
+package: Custom
+
+type: module
+core: 8.x

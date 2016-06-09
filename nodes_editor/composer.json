@@ -1,0 +1,14 @@
+{
+  "name": "drupal/nodes_editor",
+  "type": "drupal-module",
+  "description": "Provides a simple nodes edition options",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/nodes_editor",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/nodes_editor",
+    "source": "http://cgit.drupalcode.org/nodes_editor"
+  },
+  "require": { }
+}
