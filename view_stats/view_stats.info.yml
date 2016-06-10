@@ -1,0 +1,5 @@
+name: View statistics
+type: module
+description: View statistics for each node
+core: 8.x
+package: Custom
