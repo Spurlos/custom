@@ -30,10 +30,9 @@ class StatsBlock extends BlockBase {
     else {
       return;
     }
-    //dpm('nid '.$nid);
+
     $user = \Drupal::currentUser();
     $uid = $user->id();
-    //dpm('uid '.$uid);
     $query = db_insert('node_stats')
       ->fields(array(
         'nid' => $nid,
@@ -41,17 +40,14 @@ class StatsBlock extends BlockBase {
         'timestamp' => REQUEST_TIME,
       ))
       ->execute();
-    //dpm($query);
-    //dpm('nid '.$nid);
+
     $query = db_select('node_stats')
       ->condition('nid', $nid, '=')
       ->fields('node_stats')
       ->countQuery()
       ->execute();
     $total_views = $query->fetchField();
-    //dpm('Total views: '.$total_views);
 
-    //$start_time = strtotime('today');
     $start_time = REQUEST_TIME-86400;
     $end_time = REQUEST_TIME;
     $query = db_select('node_stats')
@@ -61,19 +57,19 @@ class StatsBlock extends BlockBase {
       ->countQuery()
       ->execute();
     $today_views = $query->fetchField();
-    //dpm('Today views: '.$today_views);
 
-    $uid = db_select('node_stats')
+    $query = db_select('node_stats')
+      ->condition('nid', $nid, '=')
       ->orderBy('timestamp', 'DESC')
       ->range(0,1)
-      ->fields('node_stats', array('uid'))
-      ->execute()
-      ->fetchField();
+      ->fields('node_stats', array('uid','timestamp'))
+      ->execute();
+    $result = $query->fetchAssoc();
+    $uid = $result['uid'];
+    $date = format_date($result['timestamp']);
 
     $user = user_load($uid);
-    $username = $user -> getUsername();
-    //dpm('Last viewed by '.$username.' at '.date("Y-m-d H:i:s ", REQUEST_TIME));
-
+    $username = $user->getUsername();
 
     /*$user_query = db_select('users_field_data')
       ->fields('users_field_data', array('uid','name'));
@@ -81,8 +77,6 @@ class StatsBlock extends BlockBase {
     $last_username = $query->join($user_query, 'lastuser', 'node_stats.uid = myalias.uid');
     dpm($last_username);*/
 
-    $date = format_date(REQUEST_TIME);
-    //dpm($date);
     $output = array(
       'first_p' => array(
         '#type' => 'markup',
