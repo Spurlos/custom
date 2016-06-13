@@ -32,7 +32,7 @@ function view_stats_schema() {
   return $schema;
 }
 
-function views_stats_isntall() {
+function views_stats_install() {
   $permissions = array('access stats view');
   $roles = array(DRUPAL_AUTHENTICATED_RID);
   foreach($roles as $role_name) {
