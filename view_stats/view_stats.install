@@ -31,3 +31,15 @@ function view_stats_schema() {
 
   return $schema;
 }
+
+function views_stats_isntall() {
+  $permissions = array('access stats view');
+  $roles = array(DRUPAL_AUTHENTICATED_RID);
+  foreach($roles as $role_name) {
+    foreach ($permissions as $permission) {
+      $role = user_role_load($role_name);
+      $role->grantPermission($permission);
+      $role->save();
+    }
+  }
+}

@@ -1,0 +1,4 @@
+access stats view:
+  title: 'Statistics view permisson'
+  description: 'A custom permission for tracking.'
+  restrict access: FALSE

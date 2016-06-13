@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Implements hook_help().
@@ -31,16 +32,19 @@ function view_stats_entity_view(array &$build, \Drupal\Core\Entity\EntityInterfa
   else {
     return;
   }
-
+  
   $user = \Drupal::currentUser();
-  $uid = $user->id();
-  $query = db_insert('node_stats')
-    ->fields(array(
-      'nid' => $nid,
-      'uid' => $uid,
-      'timestamp' => REQUEST_TIME,
-    ))
-    ->execute();
+  if ($user->hasPermission('access stats view')){
+    $user = \Drupal::currentUser();
+    $uid = $user->id();
+    $query = db_insert('node_stats')
+      ->fields(array(
+        'nid' => $nid,
+        'uid' => $uid,
+        'timestamp' => REQUEST_TIME,
+      ))
+      ->execute();
+  }
 
   $query = db_select('node_stats')
     ->condition('nid', $nid, '=')
