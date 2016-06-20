@@ -1,0 +1,98 @@
+<?php
+
+/**
+ * @file
+ * Contains taxonomy_rating.module..
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\flag\FlagInterface;
+
+/**
+ * Implements hook_help().
+ */
+function taxonomy_rating_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the taxonomy_rating module.
+    case 'help.page.taxonomy_rating':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Taxonomy rating based on connected entities rate points (&#039;likes&#039;)') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ *
+ */
+function taxonomy_rating_taxonomy_term_view(){
+  $term = \Drupal::routeMatch()->getParameter('taxonomy_term');
+  if ($term) {
+    $tid = $term->id();
+  }
+  else {
+    return;
+  }
+
+  taxonomy_rating_calculation($tid);
+}
+
+function taxonomy_rating_cron(){
+  $query = \Drupal::entityQuery('taxonomy_term')
+    ->condition('vid', 'genres');
+  $genre_tids = $query->execute();
+  $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
+  $terms = $term_storage->loadMultiple(array_values($genre_tids));
+  foreach ($genre_tids as $genre_tid){
+    $terms[$genre_tid]->field_genre_rating->value = taxonomy_rating_calculation($genre_tid);
+    $terms[$genre_tid]->save();
+  }
+}
+
+function taxonomy_rating_calculation($genre_tid){
+  $query = \Drupal::entityQuery('node')
+    ->condition('type', 'book')
+    ->condition("field_genre", $genre_tid, '=');
+  $book_nids = $query->execute();
+  $node_storage = \Drupal::entityManager()->getStorage('node');
+  $book_nodes = $node_storage->loadMultiple(array_values($book_nids));
+
+  $flag_service = \Drupal::service('flag');
+  $flag = $flag_service->getFlagByID('like');
+
+  $total_flags = 0;
+  foreach ($book_nodes as $book_node) {
+    $node_flags = $flag_service->getFlaggings($flag, $book_node);
+    if ($node_flags){
+      $total_flags += count($node_flags);
+    }
+  }
+  $books_rating = $total_flags * 5;
+  dpm('books rating '.$books_rating);
+
+  $total_flags = 0;
+  $book_authors = [];
+  foreach ($book_nodes as $book_node) {
+    /** @var \Drupal\node\Entity\Node $book_node */
+    foreach ($book_node->field_author as $author) {
+      $book_authors[$author->entity->id()] = $author->entity;
+    }
+  }
+  foreach ($book_authors as $book_author){
+    /** @var \Drupal\flag\FlagService $flag_service */
+    $node_flags = $flag_service->getFlaggings($flag, $book_author);
+    if ($node_flags){
+      $total_flags += count($node_flags);
+    }
+  }
+
+  $authors_rating = $total_flags * 10;
+  dpm('author rating '.$authors_rating);
+
+  $genre_rating = $books_rating + $authors_rating;
+  dpm('Total genre rating: '.$genre_rating);
+
+  return $genre_rating;
+}

@@ -1,0 +1,5 @@
+name: Taxonomy Rating
+type: module
+description: Taxonomy rating based on connected entities rate points ('likes')
+core: 8.x
+package: Custom
