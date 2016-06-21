@@ -52,6 +52,9 @@ function taxonomy_rating_cron(){
 }
 
 function taxonomy_rating_calculation($genre_tid){
+  $config = \Drupal::config('taxonomy_rating.settings');
+  $book_weight = $config->get('book_weight');
+  $author_weight = $config->get('author_weight');
   $query = \Drupal::entityQuery('node')
     ->condition('type', 'book')
     ->condition("field_genre", $genre_tid, '=');
@@ -69,8 +72,7 @@ function taxonomy_rating_calculation($genre_tid){
       $total_flags += count($node_flags);
     }
   }
-  $books_rating = $total_flags * 5;
-  dpm('books rating '.$books_rating);
+  $books_rating = $total_flags * $book_weight;
 
   $total_flags = 0;
   $book_authors = [];
@@ -88,11 +90,9 @@ function taxonomy_rating_calculation($genre_tid){
     }
   }
 
-  $authors_rating = $total_flags * 10;
-  dpm('author rating '.$authors_rating);
+  $authors_rating = $total_flags * $author_weight;
 
   $genre_rating = $books_rating + $authors_rating;
-  dpm('Total genre rating: '.$genre_rating);
 
   return $genre_rating;
 }

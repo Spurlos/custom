@@ -6,3 +6,12 @@ taxonomy_rating.rating_controller_content:
     _title: 'Raiting'
   requirements:
     _permission: 'access content'
+
+
+taxonomy_rating.settings:
+  path: '/admin/taxonomy_rating/settings'
+  defaults:
+    _form: '\Drupal\taxonomy_rating\Form\TaxonomyRatingSettingsForm'
+    _title: 'Taxonomy Rating Settings'
+  requirements:
+    _permission: 'administer site configuration'
