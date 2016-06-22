@@ -1,0 +1,7 @@
+services:
+  taxonomy_rating.default:
+    class: Drupal\taxonomy_rating\EventSubscriber\FlagSubscriber
+    arguments: []
+    tags:
+      - { name: event_subscriber }
+
