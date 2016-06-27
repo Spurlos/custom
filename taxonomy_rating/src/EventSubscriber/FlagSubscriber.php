@@ -31,75 +31,79 @@ class FlagSubscriber implements EventSubscriberInterface {
   }
 
   function modifyGenreRating($action, $event){
-    if ($action=='like'){
-      $flag = $event->getFlagging();
-    }
-    elseif ($action=='unlike') {
-      $flags = $event->getFlaggings();
-      $flag = reset($flags);
-    }
-    else {
-      return;
-    }
-    $flag_type = $flag->flag_id->value;
-    if ($flag_type=='like'){
-      $config = \Drupal::config('taxonomy_rating.settings');
-      $book_weight = $config->get('book_weight');
-      $author_weight = $config->get('author_weight');
-
-      $nid = $flag->entity_id->value;
-      $node_storage = \Drupal::entityManager()->getStorage('node');
-      $node = $node_storage->load($nid);
-      $node_type = $node->bundle();
-
-      $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
-      if ($node_type=='book'){
-        $genre_tid = $node->field_genre->entity->id();
-        $term = $term_storage->load($genre_tid);
-        if ($action=='like'){
-          $term->field_genre_rating->value += $book_weight;
-        }
-        elseif ($action=='unlike') {
-          $term->field_genre_rating->value -= $book_weight;
-        }
-        $term->save();
+    $config = \Drupal::config('taxonomy_rating.settings');
+    $calculation_method = $config->get('calculation_method');
+    if($calculation_method=='onEvent'){
+      drupal_set_message('im in event');
+      if ($action=='like'){
+        $flag = $event->getFlagging();
       }
-      elseif ($node_type=='author'){
-        //query: get all books of the author, get all genres of those books, sort unique genres
-        $genre_tids = [];
-        $author_id = $node->id();
-        dpm($author_id);
-        $query = \Drupal::entityQuery('node')
-          ->condition('type', 'book')
-          ->condition("field_author", $author_id, '=');
-        $book_nids = $query->execute();
-        dpm($book_nids);
+      elseif ($action=='unlike') {
+        $flags = $event->getFlaggings();
+        $flag = reset($flags);
+      }
+      else {
+        return;
+      }
+      $flag_type = $flag->flag_id->value;
+      if ($flag_type=='like'){
+        $config = \Drupal::config('taxonomy_rating.settings');
+        $book_weight = $config->get('book_weight');
+        $author_weight = $config->get('author_weight');
+
+        $nid = $flag->entity_id->value;
         $node_storage = \Drupal::entityManager()->getStorage('node');
-        $book_nodes = $node_storage->loadMultiple(array_values($book_nids));
-        foreach ($book_nodes as $book_node) {
-          $genre_tids[] = $book_node->field_genre->entity->id();
-        }
-        $genre_tids = array_unique($genre_tids);
-        dpm($genre_tids);
-        foreach ($genre_tids as $genre_tid){
+        $node = $node_storage->load($nid);
+        $node_type = $node->bundle();
+
+        $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
+        if ($node_type=='book'){
+          $genre_tid = $node->field_genre->entity->id();
           $term = $term_storage->load($genre_tid);
           if ($action=='like'){
-            $term->field_genre_rating->value += $author_weight;
+            $term->field_genre_rating->value += $book_weight;
           }
           elseif ($action=='unlike') {
-            $term->field_genre_rating->value -= $author_weight;
+            $term->field_genre_rating->value -= $book_weight;
           }
           $term->save();
-          dpm($term->field_genre_rating->value);
+        }
+        elseif ($node_type=='author'){
+          //query: get all books of the author, get all genres of those books, sort unique genres
+          $genre_tids = [];
+          $author_id = $node->id();
+          $query = \Drupal::entityQuery('node')
+            ->condition('type', 'book')
+            ->condition("field_author", $author_id, '=');
+          $book_nids = $query->execute();
+          $node_storage = \Drupal::entityManager()->getStorage('node');
+          $book_nodes = $node_storage->loadMultiple(array_values($book_nids));
+          foreach ($book_nodes as $book_node) {
+            $genre_tids[] = $book_node->field_genre->entity->id();
+          }
+          $genre_tids = array_unique($genre_tids);
+          foreach ($genre_tids as $genre_tid){
+            $term = $term_storage->load($genre_tid);
+            if ($action=='like'){
+              $term->field_genre_rating->value += $author_weight;
+            }
+            elseif ($action=='unlike') {
+              $term->field_genre_rating->value -= $author_weight;
+            }
+            $term->save();
+          }
+        }
+        else {
+          return;
         }
       }
       else {
         return;
       }
     }
-    else {
+    else{
       return;
-    }
+    }    
   }
 
   /**
@@ -110,7 +114,6 @@ class FlagSubscriber implements EventSubscriberInterface {
    */
   public function onLike(Event $event) {
     $this->modifyGenreRating('like',$event);
-    drupal_set_message('Event flag.entity_flagged thrown by Subscriber in module taxonomy_rating.', 'status', TRUE);
   }
   /**
    * This method is called whenever the flag.entity_unflagged event is
@@ -120,7 +123,6 @@ class FlagSubscriber implements EventSubscriberInterface {
    */
   public function onUnlike(Event $event) {
     $this->modifyGenreRating('unlike',$event);
-    drupal_set_message('Event flag.entity_unflagged thrown by Subscriber in module taxonomy_rating.', 'status', TRUE);
   }
 
 }

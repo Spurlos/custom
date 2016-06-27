@@ -40,14 +40,22 @@ function taxonomy_rating_taxonomy_term_view(){
 }
 
 function taxonomy_rating_cron(){
-  $query = \Drupal::entityQuery('taxonomy_term')
-    ->condition('vid', 'genres');
-  $genre_tids = $query->execute();
-  $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
-  $terms = $term_storage->loadMultiple(array_values($genre_tids));
-  foreach ($genre_tids as $genre_tid){
-    $terms[$genre_tid]->field_genre_rating->value = \Drupal::service('taxonomy_rating')->calculate($genre_tid);;
-    $terms[$genre_tid]->save();
+  $config = \Drupal::config('taxonomy_rating.settings');
+  $calculation_method = $config->get('calculation_method');
+  if($calculation_method=='onCron') {
+    $query = \Drupal::entityQuery('taxonomy_term')
+      ->condition('vid', 'genres');
+    $genre_tids = $query->execute();
+    $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
+    $terms = $term_storage->loadMultiple(array_values($genre_tids));
+    foreach ($genre_tids as $genre_tid) {
+      $terms[$genre_tid]->field_genre_rating->value = \Drupal::service('taxonomy_rating')
+        ->calculate($genre_tid);;
+      $terms[$genre_tid]->save();
+    }
+  }
+  else {
+    return;
   }
 }
 

@@ -47,6 +47,15 @@ class TaxonomyRatingSettingsForm extends ConfigFormBase {
       '#size' => 4,
       '#default_value' => $config->get('author_weight'),
     );
+    $form['calculation_method'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Calculate genre rating by'),
+      '#options' => [
+        'onEvent' => $this->t('Event subscriber'),
+        'onCron' => $this->t('Cron task'),
+      ],
+      '#default_value' => $config->get('calculation_method'),
+    ];
     $form['actions'] = array('#type' => 'actions');
     $form['actions']['submit'] = array(
       '#type' => 'submit',
@@ -72,8 +81,10 @@ class TaxonomyRatingSettingsForm extends ConfigFormBase {
       $this->config('taxonomy_rating.settings')
         ->set('book_weight', $form_state->getValue('book_weight'))
         ->set('author_weight', $form_state->getValue('author_weight'))
+        ->set('calculation_method', $form_state->getValue('calculation_method'))
         ->save();
-      dpm('Settings saved');
+
+      drupal_set_message('Settings saved');
     }
 
     if ($triggering_element['#name']=='rebuild'){
@@ -83,11 +94,11 @@ class TaxonomyRatingSettingsForm extends ConfigFormBase {
       $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
       $terms = $term_storage->loadMultiple(array_values($genre_tids));
       foreach ($genre_tids as $genre_tid){
-        $terms[$genre_tid]->field_genre_rating->value = taxonomy_rating_calculation($genre_tid);
+        $terms[$genre_tid]->field_genre_rating->value = \Drupal::service('taxonomy_rating')->calculate($genre_tids);
         $terms[$genre_tid]->save();
       }
 
-      dpm('Cache rebuilt');
+      drupal_set_message('Cache rebuilt');
     }
   }
 
