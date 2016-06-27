@@ -56,7 +56,12 @@ class FlagSubscriber implements EventSubscriberInterface {
       if ($node_type=='book'){
         $genre_tid = $node->field_genre->entity->id();
         $term = $term_storage->load($genre_tid);
-        $term->field_genre_rating->value += $book_weight;
+        if ($action=='like'){
+          $term->field_genre_rating->value += $book_weight;
+        }
+        elseif ($action=='unlike') {
+          $term->field_genre_rating->value -= $book_weight;
+        }
         $term->save();
       }
       elseif ($node_type=='author'){

@@ -4,4 +4,7 @@ services:
     arguments: []
     tags:
       - { name: event_subscriber }
+  taxonomy_rating:
+    class: Drupal\taxonomy_rating\TaxonomyRatingService
+    arguments: ["@entity.query", "@config.factory", "@entity.manager", "@flag"]
 

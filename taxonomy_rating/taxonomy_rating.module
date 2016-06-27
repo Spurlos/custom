@@ -36,7 +36,7 @@ function taxonomy_rating_taxonomy_term_view(){
     return;
   }
 
-  taxonomy_rating_calculation($tid);
+  \Drupal::service('taxonomy_rating')->calculate($tid);
 }
 
 function taxonomy_rating_cron(){
@@ -46,53 +46,8 @@ function taxonomy_rating_cron(){
   $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
   $terms = $term_storage->loadMultiple(array_values($genre_tids));
   foreach ($genre_tids as $genre_tid){
-    $terms[$genre_tid]->field_genre_rating->value = taxonomy_rating_calculation($genre_tid);
+    $terms[$genre_tid]->field_genre_rating->value = \Drupal::service('taxonomy_rating')->calculate($genre_tid);;
     $terms[$genre_tid]->save();
   }
 }
 
-function taxonomy_rating_calculation($genre_tid){
-  $config = \Drupal::config('taxonomy_rating.settings');
-  $book_weight = $config->get('book_weight');
-  $author_weight = $config->get('author_weight');
-  $query = \Drupal::entityQuery('node')
-    ->condition('type', 'book')
-    ->condition("field_genre", $genre_tid, '=');
-  $book_nids = $query->execute();
-  $node_storage = \Drupal::entityManager()->getStorage('node');
-  $book_nodes = $node_storage->loadMultiple(array_values($book_nids));
-
-  $flag_service = \Drupal::service('flag');
-  $flag = $flag_service->getFlagByID('like');
-
-  $total_flags = 0;
-  foreach ($book_nodes as $book_node) {
-    $node_flags = $flag_service->getFlaggings($flag, $book_node);
-    if ($node_flags){
-      $total_flags += count($node_flags);
-    }
-  }
-  $books_rating = $total_flags * $book_weight;
-
-  $total_flags = 0;
-  $book_authors = [];
-  foreach ($book_nodes as $book_node) {
-    /** @var \Drupal\node\Entity\Node $book_node */
-    foreach ($book_node->field_author as $author) {
-      $book_authors[$author->entity->id()] = $author->entity;
-    }
-  }
-  foreach ($book_authors as $book_author){
-    /** @var \Drupal\flag\FlagService $flag_service */
-    $node_flags = $flag_service->getFlaggings($flag, $book_author);
-    if ($node_flags){
-      $total_flags += count($node_flags);
-    }
-  }
-
-  $authors_rating = $total_flags * $author_weight;
-
-  $genre_rating = $books_rating + $authors_rating;
-
-  return $genre_rating;
-}
