@@ -34,7 +34,6 @@ class FlagSubscriber implements EventSubscriberInterface {
     $config = \Drupal::config('taxonomy_rating.settings');
     $calculation_method = $config->get('calculation_method');
     if($calculation_method=='onEvent'){
-      drupal_set_message('im in event');
       if ($action=='like'){
         $flag = $event->getFlagging();
       }

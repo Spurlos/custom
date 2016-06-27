@@ -1,0 +1,5 @@
+taxonomy_rating.settings:
+  title: 'Taxonomy rating settings'
+  description: 'Manage taxonomy rating settings for your site'
+  parent: system.admin_config_development
+  route_name: taxonomy_rating.settings
