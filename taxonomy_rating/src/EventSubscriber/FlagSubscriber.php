@@ -92,17 +92,8 @@ class FlagSubscriber implements EventSubscriberInterface {
             $term->save();
           }
         }
-        else {
-          return;
-        }
-      }
-      else {
-        return;
       }
     }
-    else{
-      return;
-    }    
   }
 
   /**
