@@ -42,6 +42,7 @@ function taxonomy_rating_taxonomy_term_view(){
 function taxonomy_rating_cron(){
   $config = \Drupal::config('taxonomy_rating.settings');
   $calculation_method = $config->get('calculation_method');
+  $rating_storage_fieldname = $config->get('rating_storage_fieldname');
   if($calculation_method=='onCron') {
     $query = \Drupal::entityQuery('taxonomy_term')
       ->condition('vid', 'genres');
@@ -49,7 +50,7 @@ function taxonomy_rating_cron(){
     $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
     $terms = $term_storage->loadMultiple(array_values($genre_tids));
     foreach ($genre_tids as $genre_tid) {
-      $terms[$genre_tid]->field_genre_rating->value = \Drupal::service('taxonomy_rating')
+      $terms[$genre_tid]->$rating_storage_fieldname->value = \Drupal::service('taxonomy_rating')
         ->calculate($genre_tid);;
       $terms[$genre_tid]->save();
     }

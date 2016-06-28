@@ -1,13 +1,3 @@
-
-taxonomy_rating.rating_controller_content:
-  path: '/rating/genres'
-  defaults:
-    _controller: '\Drupal\taxonomy_rating\Controller\RatingController::content'
-    _title: 'Raiting'
-  requirements:
-    _permission: 'access content'
-
-
 taxonomy_rating.settings:
   path: '/admin/taxonomy_rating/settings'
   defaults:

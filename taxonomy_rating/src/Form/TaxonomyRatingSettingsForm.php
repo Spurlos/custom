@@ -30,6 +30,16 @@ class TaxonomyRatingSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $fields = [];
+//    $test = \Drupal::entityTypeManager()->getDefinition('taxonomy_vocabulary');
+    $entity_type_id = 'taxonomy_term';
+    $bundle = 'genres';
+    foreach (\Drupal::entityManager()->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
+      if (!empty($field_definition->getTargetBundle())) {
+        $fields[$field_name] = $field_definition->getLabel();
+      }
+    }
+
     $config = $this->config('taxonomy_rating.settings');
     $form['book_weight'] = array(
       '#type' => 'textfield',
@@ -56,15 +66,22 @@ class TaxonomyRatingSettingsForm extends ConfigFormBase {
       ],
       '#default_value' => $config->get('calculation_method'),
     ];
+    $form['rating_storage_fieldname'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Field for storing genre rating'),
+      '#options' => $fields,
+      '#size' => 1,
+      '#default_value' => $config->get('rating_storage_fieldname'),
+    );
     $form['actions'] = array('#type' => 'actions');
     $form['actions']['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Save'),
+      '#value' => $this->t('Save'),
       '#name' => 'submit',
     );
     $form['actions']['rebuild'] = array(
       '#type' => 'submit',
-      '#value' => t('Rebuild rating cache'),
+      '#value' => $this->t('Rebuild rating cache'),
       '#name' => 'rebuild',
     );
 
@@ -82,19 +99,22 @@ class TaxonomyRatingSettingsForm extends ConfigFormBase {
         ->set('book_weight', $form_state->getValue('book_weight'))
         ->set('author_weight', $form_state->getValue('author_weight'))
         ->set('calculation_method', $form_state->getValue('calculation_method'))
+        ->set('rating_storage_fieldname', $form_state->getValue('rating_storage_fieldname'))
         ->save();
 
       drupal_set_message('Settings saved');
     }
 
     if ($triggering_element['#name']=='rebuild'){
+      $config = $this->config('taxonomy_rating.settings');
+      $rating_storage_fieldname = $config->get('rating_storage_fieldname');
       $query = \Drupal::entityQuery('taxonomy_term')
         ->condition('vid', 'genres');
       $genre_tids = $query->execute();
       $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
       $terms = $term_storage->loadMultiple(array_values($genre_tids));
       foreach ($genre_tids as $genre_tid){
-        $terms[$genre_tid]->field_genre_rating->value = \Drupal::service('taxonomy_rating')->calculate($genre_tids);
+        $terms[$genre_tid]->$rating_storage_fieldname->value = \Drupal::service('taxonomy_rating')->calculate($genre_tid);
         $terms[$genre_tid]->save();
       }
 

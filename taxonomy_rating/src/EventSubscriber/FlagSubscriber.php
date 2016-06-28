@@ -46,10 +46,6 @@ class FlagSubscriber implements EventSubscriberInterface {
       }
       $flag_type = $flag->flag_id->value;
       if ($flag_type=='like'){
-        $config = \Drupal::config('taxonomy_rating.settings');
-        $book_weight = $config->get('book_weight');
-        $author_weight = $config->get('author_weight');
-
         $nid = $flag->entity_id->value;
         $node_storage = \Drupal::entityManager()->getStorage('node');
         $node = $node_storage->load($nid);
@@ -57,18 +53,22 @@ class FlagSubscriber implements EventSubscriberInterface {
 
         $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
         if ($node_type=='book'){
+          $book_weight = $config->get('book_weight');
+          $rating_storage_fieldname = $config->get('rating_storage_fieldname');
           $genre_tid = $node->field_genre->entity->id();
           $term = $term_storage->load($genre_tid);
           if ($action=='like'){
-            $term->field_genre_rating->value += $book_weight;
+            $term->$rating_storage_fieldname->value += $book_weight;
           }
           elseif ($action=='unlike') {
-            $term->field_genre_rating->value -= $book_weight;
+            $term->$rating_storage_fieldname->value -= $book_weight;
           }
           $term->save();
         }
         elseif ($node_type=='author'){
           //query: get all books of the author, get all genres of those books, sort unique genres
+          $author_weight = $config->get('author_weight');
+          $rating_storage_fieldname = $config->get('rating_storage_fieldname');
           $genre_tids = [];
           $author_id = $node->id();
           $query = \Drupal::entityQuery('node')
@@ -84,10 +84,10 @@ class FlagSubscriber implements EventSubscriberInterface {
           foreach ($genre_tids as $genre_tid){
             $term = $term_storage->load($genre_tid);
             if ($action=='like'){
-              $term->field_genre_rating->value += $author_weight;
+              $term->$rating_storage_fieldname->value += $author_weight;
             }
             elseif ($action=='unlike') {
-              $term->field_genre_rating->value -= $author_weight;
+              $term->$rating_storage_fieldname->value -= $author_weight;
             }
             $term->save();
           }
