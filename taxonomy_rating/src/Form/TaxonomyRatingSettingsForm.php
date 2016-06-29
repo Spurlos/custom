@@ -31,12 +31,14 @@ class TaxonomyRatingSettingsForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $fields = [];
-//    $test = \Drupal::entityTypeManager()->getDefinition('taxonomy_vocabulary');
     $entity_type_id = 'taxonomy_term';
     $bundle = 'genres';
     foreach (\Drupal::entityManager()->getFieldDefinitions($entity_type_id, $bundle) as $field_name => $field_definition) {
       if (!empty($field_definition->getTargetBundle())) {
-        $fields[$field_name] = $field_definition->getLabel();
+        $type = $field_definition->getType();
+        if ($type=='integer'){
+          $fields[$field_name] = $field_definition->getLabel();
+        }
       }
     }
 
