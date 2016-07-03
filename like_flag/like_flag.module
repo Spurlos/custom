@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * @file
+ * Contains like_flag.module..
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\node\Entity\NodeType;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+
+/**
+ * Implements hook_help().
+ */
+function like_flag_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the like_flag module.
+    case 'help.page.like_flag':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Module adds a like\unlike button on each node and tracks the number of &#039;likes&#039;') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function like_flag_entity_extra_field_info() {
+  $extra = array();
+
+  foreach (NodeType::loadMultiple() as $bundle) {
+    $extra['node'][$bundle->id()]['display']['like_flag_field'] = array(
+      'label' => t('Like button field'),
+      'description' => t('A like button pseudo-field for node entities'),
+      'weight' => 100,
+      'visible' => TRUE,
+    );
+  }
+
+  return $extra;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function like_flag_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  $nid = $entity->id();
+//  if (\Drupal::request()->getRequestFormat() != 'html') {
+//    \Drupal::currentUser()->getDisplayName();
+//    return;
+//  }
+  if ($display->getComponent('like_flag_field')) {
+    $build['like_flag_field'] = \Drupal::formBuilder()->getForm('Drupal\like_flag\Form\LikeFlagForm', $nid);
+  }
+}

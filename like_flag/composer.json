@@ -1,0 +1,14 @@
+{
+  "name": "drupal/like_flag",
+  "type": "drupal-module",
+  "description": "Module adds a like\unlike button on each node and tracks the number of 'likes'",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/like_flag",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/like_flag",
+    "source": "http://cgit.drupalcode.org/like_flag"
+  },
+  "require": { }
+}

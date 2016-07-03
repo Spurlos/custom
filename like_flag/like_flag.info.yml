@@ -1,0 +1,5 @@
+name: Like Flag
+type: module
+description: Module adds a like\unlike button on each node and tracks the number of 'likes'
+core: 8.x
+package: Custom

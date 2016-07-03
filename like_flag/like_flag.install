@@ -1,0 +1,43 @@
+<?php
+
+function like_flag_schema() {
+  $schema['like_flags'] = array(
+    'description' => 'Like flags for {node}s.',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The {node}.nid for the flagging.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'description' => 'The id of the user that has flagged the node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+  );
+  $schema['flaggings'] = array(
+    'description' => 'Like flags for {node}s.',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The {node}.nid for the flagging.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'like_flaggings' => array(
+        'description' => 'Total number of flaggigns for the node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+  );
+  return $schema;
+}
