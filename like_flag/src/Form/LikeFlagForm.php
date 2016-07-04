@@ -9,6 +9,8 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\like_flag\LikeService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class LikeFlagForm.
@@ -17,6 +19,26 @@ use Drupal\Core\Ajax\HtmlCommand;
  */
 class LikeFlagForm extends FormBase {
 
+  protected $likeService;
+
+  /**
+   * Constructs the NodeTypeForm object.
+   *
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   The entity manager.
+   */
+  public function __construct(LikeService $likeService) {
+    $this->likeService = $likeService;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('like_flag')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -35,29 +57,18 @@ class LikeFlagForm extends FormBase {
     dpm('buildForm nid:'.$nid);
     $user = \Drupal::currentUser();
     $uid = $user->id();
+    $like_flag = \Drupal::service('like_flag');
 
-    $query = db_select('like_flags')
-      ->condition('nid', $nid, '=')
-      ->condition('uid', $uid, '=')
-      ->fields('like_flags')
-      ->execute();
-    $isFlagged = $query->fetchField();
-    if ($isFlagged){
+    if ($like_flag->isFlagged($nid, $uid)){
       $like_button_value = 'Unlike';
     }
     else {
       $like_button_value = 'Like';
     }
 
-    $query = db_select('flaggings')
-      ->condition('nid', $nid, '=')
-      ->fields('flaggings')
-      ->execute();
-    $likes_count_value = $query->fetchField(1);
+    $likes_count_value = $like_flag->getFlaggingCount($nid);
 
     $like_id = Html::getUniqueId('like');
-    $like_button_id = Html::getUniqueId('like-button');
-    $likes_count_id = Html::getUniqueId('like-count');
 
     $form['like'] = [
       '#id' => $like_id,
@@ -85,61 +96,22 @@ class LikeFlagForm extends FormBase {
     $user = \Drupal::currentUser();
     $uid = $user->id();
 
-    //service function candidate: isFlagged($node, $user)
-    $query = db_select('like_flags')
-      ->condition('nid', $nid, '=')
-      ->condition('uid', $uid, '=')
-      ->fields('like_flags')
-      ->execute();
-    $isFlagged = $query->fetchField();
-    if (!$isFlagged){
-      //service function candidate: addFlagging($node, $user)
-      $query = db_insert('like_flags')
-        ->fields(array(
-          'nid' => $nid,
-          'uid' => $uid,
-        ));
-      $query->execute();
-
-      //service function candidate: existFlaggingCount($node)
-      $query = db_select('flaggings')
-        ->condition('nid', $nid, '=')
-        ->fields('flaggings')
-        ->execute();
-      $existFlagging = $query->fetchField();
-
-      if ($existFlagging){
-        //service function candidate: updateFlaggingCount($node, $action)
-        $query = db_update('flaggings')
-          ->condition('nid', $nid, '=')
-          ->expression('like_flaggings', 'like_flaggings + 1');
-        $query->execute();
+    $like_flag = \Drupal::service('like_flag');
+    if (!$like_flag->isFlagged($nid, $uid)){
+      $like_flag->addFlagging($nid, $uid);
+      if ($like_flag->existFlaggingCount($nid)){
+        $like_flag->updateFlaggingCount($nid, '+');
       }
       else {
-        //service function candidate: addFlaggingCount ($node)
-        $query = db_insert('flaggings')
-          ->fields(array(
-            'nid' => $nid,
-            'like_flaggings' => 1,
-          ));
-        $query->execute();
+        $like_flag->addFlaggingCount ($nid);
       }
       
       $form['like']['button']['#value'] = 'Unlike';
       $form['like']['count']['#markup'] += 1;
     }
     else{
-      //service function candidate: removeFlagging($node, $user)
-      $query = db_delete('like_flags')
-        ->condition('nid', $nid, '=')
-        ->condition('uid', $uid, '=');
-      $query->execute();
-
-      //service function candidate: updateFlaggingCount($node, $action)
-      $query = db_update('flaggings')
-        ->condition('nid', $nid, '=')
-        ->expression('like_flaggings', 'like_flaggings - 1');
-      $query->execute();
+      $like_flag->removeFlagging($nid, $uid);
+      $like_flag->updateFlaggingCount($nid, '-');
 
       $form['like']['button']['#value'] = 'Like';
       $form['like']['count']['#markup'] -= 1;

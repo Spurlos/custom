@@ -24,27 +24,65 @@ class LikeService implements LikeServiceInterface {
     $this->database = $database;
   }
 
-  public function isFlagged($node, $user) {
-    // TODO: Implement isFlagged() method.
+  public function isFlagged($nid, $uid) {
+    $query = $this->database->select('like_flags')
+      ->condition('nid', $nid, '=')
+      ->condition('uid', $uid, '=')
+      ->fields('like_flags')
+      ->execute();
+    return $query->fetchField();
   }
 
-  public function addFlagging($node, $user) {
-    // TODO: Implement addFlagging() method.
+  public function addFlagging($nid, $uid) {
+    $query = $this->database->insert('like_flags')
+      ->fields(array(
+        'nid' => $nid,
+        'uid' => $uid,
+      ));
+    $query->execute();
   }
 
-  public function existFlaggingCount($node) {
-    // TODO: Implement existFlaggingCount() method.
+  public function existFlaggingCount($nid) {
+    $query = $this->database->select('flaggings')
+      ->condition('nid', $nid, '=')
+      ->fields('flaggings')
+      ->execute();
+    return $query->fetchField();
   }
 
-  public function updateFlaggingCount($node, $action) {
-    // TODO: Implement updateFlaggingCount() method.
+  public function updateFlaggingCount($nid, $action) {
+    $query = $this->database->update('flaggings')
+      ->condition('nid', $nid, '=');
+      if($action=='+'){
+        $query->expression('like_flaggings', 'like_flaggings + 1');
+      }
+      elseif ($action=='-'){
+        $query->expression('like_flaggings', 'like_flaggings - 1');
+      }
+    $query->execute();
   }
 
-  public function addFlaggingCount($node) {
-    // TODO: Implement addFlaggingCount() method.
+  public function getFlaggingCount($nid) {
+    $query = $this->database->select('flaggings')
+      ->condition('nid', $nid, '=')
+      ->fields('flaggings')
+      ->execute();
+    return $query->fetchField(1);
   }
 
-  public function removeFlagging($node, $user) {
-    // TODO: Implement removeFlagging() method.
+  public function addFlaggingCount($nid) {
+    $query = $this->database->insert('flaggings')
+      ->fields(array(
+        'nid' => $nid,
+        'like_flaggings' => 1,
+      ));
+    $query->execute();
+  }
+
+  public function removeFlagging($nid, $uid) {
+    $query = $this->database->delete('like_flags')
+      ->condition('nid', $nid, '=')
+      ->condition('uid', $uid, '=');
+    $query->execute();
   }
 }

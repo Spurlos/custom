@@ -1,9 +1,5 @@
 services:
-  like_flag.default:
-    class: Drupal\like_flag\LikeFlagService
-    arguments: ["@entity.query", "@entity.manager"]
-
-  like_flag.default:
+  like_flag:
     class: Drupal\like_flag\LikeService
     arguments: ["@database"]
 
