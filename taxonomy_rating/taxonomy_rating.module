@@ -27,7 +27,7 @@ function taxonomy_rating_help($route_name, RouteMatchInterface $route_match) {
 /**
  *
  */
-function taxonomy_rating_taxonomy_term_view(){
+function taxonomy_rating_taxonomy_term_view() {
   $term = \Drupal::routeMatch()->getParameter('taxonomy_term');
   if ($term) {
     $tid = $term->id();
@@ -39,11 +39,11 @@ function taxonomy_rating_taxonomy_term_view(){
   \Drupal::service('taxonomy_rating')->calculate($tid);
 }
 
-function taxonomy_rating_cron(){
+function taxonomy_rating_cron() {
   $config = \Drupal::config('taxonomy_rating.settings');
   $calculation_method = $config->get('calculation_method');
   $rating_storage_fieldname = $config->get('rating_storage_fieldname');
-  if($calculation_method=='onCron') {
+  if ($calculation_method == 'onCron') {
     $query = \Drupal::entityQuery('taxonomy_term')
       ->condition('vid', 'genres');
     $genre_tids = $query->execute();

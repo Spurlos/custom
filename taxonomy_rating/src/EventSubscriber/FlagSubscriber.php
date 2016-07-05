@@ -30,14 +30,14 @@ class FlagSubscriber implements EventSubscriberInterface {
     return $events;
   }
 
-  function modifyGenreRating($action, $event){
+  function modifyGenreRating($action, $event) {
     $config = \Drupal::config('taxonomy_rating.settings');
     $calculation_method = $config->get('calculation_method');
-    if($calculation_method=='onEvent'){
-      if ($action=='like'){
+    if ($calculation_method == 'onEvent') {
+      if ($action == 'like') {
         $flag = $event->getFlagging();
       }
-      elseif ($action=='unlike') {
+      elseif ($action == 'unlike') {
         $flags = $event->getFlaggings();
         $flag = reset($flags);
       }
@@ -45,27 +45,27 @@ class FlagSubscriber implements EventSubscriberInterface {
         return;
       }
       $flag_type = $flag->flag_id->value;
-      if ($flag_type=='like'){
+      if ($flag_type == 'like') {
         $nid = $flag->entity_id->value;
         $node_storage = \Drupal::entityManager()->getStorage('node');
         $node = $node_storage->load($nid);
         $node_type = $node->bundle();
 
         $term_storage = \Drupal::entityManager()->getStorage('taxonomy_term');
-        if ($node_type=='book'){
+        if ($node_type == 'book') {
           $book_weight = $config->get('book_weight');
           $rating_storage_fieldname = $config->get('rating_storage_fieldname');
           $genre_tid = $node->field_genre->entity->id();
           $term = $term_storage->load($genre_tid);
-          if ($action=='like'){
+          if ($action == 'like') {
             $term->$rating_storage_fieldname->value += $book_weight;
           }
-          elseif ($action=='unlike') {
+          elseif ($action == 'unlike') {
             $term->$rating_storage_fieldname->value -= $book_weight;
           }
           $term->save();
         }
-        elseif ($node_type=='author'){
+        elseif ($node_type == 'author') {
           //query: get all books of the author, get all genres of those books, sort unique genres
           $author_weight = $config->get('author_weight');
           $rating_storage_fieldname = $config->get('rating_storage_fieldname');
@@ -81,12 +81,12 @@ class FlagSubscriber implements EventSubscriberInterface {
             $genre_tids[] = $book_node->field_genre->entity->id();
           }
           $genre_tids = array_unique($genre_tids);
-          foreach ($genre_tids as $genre_tid){
+          foreach ($genre_tids as $genre_tid) {
             $term = $term_storage->load($genre_tid);
-            if ($action=='like'){
+            if ($action == 'like') {
               $term->$rating_storage_fieldname->value += $author_weight;
             }
-            elseif ($action=='unlike') {
+            elseif ($action == 'unlike') {
               $term->$rating_storage_fieldname->value -= $author_weight;
             }
             $term->save();
@@ -103,8 +103,9 @@ class FlagSubscriber implements EventSubscriberInterface {
    * @param GetResponseEvent $event
    */
   public function onLike(Event $event) {
-    $this->modifyGenreRating('like',$event);
+    $this->modifyGenreRating('like', $event);
   }
+
   /**
    * This method is called whenever the flag.entity_unflagged event is
    * dispatched.
@@ -112,7 +113,7 @@ class FlagSubscriber implements EventSubscriberInterface {
    * @param GetResponseEvent $event
    */
   public function onUnlike(Event $event) {
-    $this->modifyGenreRating('unlike',$event);
+    $this->modifyGenreRating('unlike', $event);
   }
 
 }

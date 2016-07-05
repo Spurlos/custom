@@ -38,6 +38,7 @@ class TaxonomyRatingService implements TaxonomyRatingServiceInterface {
    * @var \Drupal\flag\FlagService
    */
   protected $flag;
+
   /**
    * Constructor.
    */
@@ -48,7 +49,7 @@ class TaxonomyRatingService implements TaxonomyRatingServiceInterface {
     $this->flag = $flag;
   }
 
-  public function calculate($genre_tid){
+  public function calculate($genre_tid) {
     $config = $this->configFactory->get('taxonomy_rating.settings');
     $book_weight = $config->get('book_weight');
     $author_weight = $config->get('author_weight');
@@ -65,7 +66,7 @@ class TaxonomyRatingService implements TaxonomyRatingServiceInterface {
     $total_flags = 0;
     foreach ($book_nodes as $book_node) {
       $node_flags = $flag_service->getFlaggings($flag, $book_node);
-      if ($node_flags){
+      if ($node_flags) {
         $total_flags += count($node_flags);
       }
     }
@@ -79,10 +80,10 @@ class TaxonomyRatingService implements TaxonomyRatingServiceInterface {
         $book_authors[$author->entity->id()] = $author->entity;
       }
     }
-    foreach ($book_authors as $book_author){
+    foreach ($book_authors as $book_author) {
       /** @var \Drupal\flag\FlagService $flag_service */
       $node_flags = $flag_service->getFlaggings($flag, $book_author);
-      if ($node_flags){
+      if ($node_flags) {
         $total_flags += count($node_flags);
       }
     }
@@ -91,5 +92,5 @@ class TaxonomyRatingService implements TaxonomyRatingServiceInterface {
     $genre_rating = $books_rating + $authors_rating;
     return $genre_rating;
   }
-  
+
 }
