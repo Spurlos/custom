@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\like_flag\Form;
+namespace Drupal\like_flag\form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\InsertCommand;
@@ -108,6 +108,7 @@ class LikeFlagForm extends FormBase {
       
       $form['like']['button']['#value'] = 'Unlike';
       $form['like']['count']['#markup'] += 1;
+      
     }
     else{
       $like_flag->removeFlagging($nid, $uid);

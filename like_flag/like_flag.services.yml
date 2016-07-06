@@ -1,5 +1,5 @@
 services:
   like_flag:
     class: Drupal\like_flag\LikeService
-    arguments: ["@database"]
+    arguments: ["@database","@event_dispatcher"]
 

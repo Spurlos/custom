@@ -3,6 +3,8 @@
 namespace Drupal\like_flag;
 
 use Drupal\Core\Database\Driver\mysql\Connection;
+use Drupal\like_flag\Event\FlagEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Class LikeService.
@@ -18,10 +20,17 @@ class LikeService implements LikeServiceInterface {
    */
   protected $database;
   /**
+   * Symfony\Component\EventDispatcher\EventDispatcherInterface definition.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $dispatcher;
+  /**
    * Constructor.
    */
-  public function __construct(Connection $database) {
+  public function __construct(Connection $database, EventDispatcherInterface $dispatcher) {
     $this->database = $database;
+    $this->dispatcher = $dispatcher;
   }
 
   public function isFlagged($nid, $uid) {
@@ -40,6 +49,9 @@ class LikeService implements LikeServiceInterface {
         'uid' => $uid,
       ));
     $query->execute();
+    
+    $event = new FlagEvent($nid, $uid);
+    $this->dispatcher->dispatch('like_flag.like', $event);
   }
 
   public function existFlaggingCount($nid) {
@@ -84,5 +96,8 @@ class LikeService implements LikeServiceInterface {
       ->condition('nid', $nid, '=')
       ->condition('uid', $uid, '=');
     $query->execute();
+
+    $event = new FlagEvent($nid, $uid);
+    $this->dispatcher->dispatch('like_flag.unlike', $event);
   }
 }
