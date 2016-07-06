@@ -2,6 +2,7 @@
 
 namespace Drupal\taxonomy_rating\EventSubscriber;
 
+use Drupal\flag\Event\FlagEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\EventDispatcher\Event;
 
@@ -24,8 +25,8 @@ class FlagSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   static function getSubscribedEvents() {
-    $events['flag.entity_flagged'] = ['onLike'];
-    $events['flag.entity_unflagged'] = ['onUnlike'];
+    $events[FlagEvents::ENTITY_FLAGGED] = ['onLike'];
+    $events[FlagEvents::ENTITY_UNFLAGGED] = ['onUnlike'];
 
     return $events;
   }
