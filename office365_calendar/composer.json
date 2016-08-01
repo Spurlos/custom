@@ -1,0 +1,17 @@
+{
+  "name": "drupal/office365_calendar",
+  "type": "drupal-module",
+  "description": "Module provides Office365 calendar API integration for fetching user events to local view. Uses OAuth 2.0 for authentication and FullCalendar.js for display.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/office365_calendar",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/office365_calendar",
+    "source": "http://cgit.drupalcode.org/office365_calendar"
+  },
+  "require": {
+    "stevenmaguire/oauth2-microsoft": "^0.2.1"
+  }
+}
+
