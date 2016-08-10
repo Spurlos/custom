@@ -51,13 +51,20 @@ function office365_calendar_form_alter(&$form, &$form_state, $form_id) {
       foreach ($calendars['value'] as $calendar) {
         $options[$calendar['Id']] = $calendar['Name'];
       }
+      $calendarexists = \Drupal::service('user.data')->get('office365_calendar',
+        \Drupal::routeMatch()->getParameter('user')->id(),'calendar');
+      if (!$calendarexists){
+        reset($options);
+        \Drupal::service('user.data')->set('office365_calendar', \Drupal::routeMatch()->getParameter('user')->id(),
+          'calendar', key($options));
+      }
       $form['office365_calendar']['selector'] = array(
         '#type' => 'select',
         '#title' => t('Schedule calendar'),
         '#options' => $options,
         '#size' => 1,
         '#default_value' => $calendarid,
-        '#description' => 'Select the desired calendar from your Office365 calendar list that will be shown on your profile page.',
+        '#description' => t('Select the desired calendar from your Office365 calendar list that will be shown on your profile page.'),
       );
       $form['actions']['submit']['#submit'][] = 'office365_calendar_select';
 
@@ -91,13 +98,13 @@ function office365_calendar_authenticate($form, FormStateInterface $form_state){
 }
 
 function office365_calendar_disconnect(){
-  \Drupal::service('office365_oauth2')->deleteToken(\Drupal::currentUser()->id());
+  \Drupal::service('office365_oauth2')->deleteToken(\Drupal::routeMatch()->getParameter('user')->id());
 }
 
 function office365_calendar_select($form, FormStateInterface $form_state){
   \Drupal::service('user.data')->set(
     'office365_calendar',
-    \Drupal::currentUser()->id(),
+    \Drupal::routeMatch()->getParameter('user')->id(),
     'calendar',
     $form_state->getValue('selector')
   );
@@ -107,19 +114,20 @@ function office365_calendar_select($form, FormStateInterface $form_state){
  * Implements hook_entity_extra_field_info().
  */
 function office365_calendar_entity_extra_field_info() {
-  foreach (ProfileType::loadMultiple() as $bundle) {
-    $extra['profile'][$bundle->id()]['display']['office365_calendar_field'] = array(
+  $profile_type = \Drupal::service('config.factory')->get('office365_calendar.settings')->get('profile_type');
+  //foreach (ProfileType::loadMultiple() as $bundle) {
+    $extra['profile'][$profile_type]['display']['office365_calendar_field'] = array(
       'label' => t('Office365 calendar'),
-      'description' => t('A calendar pseudo-field for node entities'),
+      'description' => t('A calendar pseudo-field for profile entities'),
       'weight' => 100,
-      'visible' => TRUE,
+      'visible' => FALSE,
     );
-  }
+  //}
 
   return $extra;
 }
 
-function like_flag_profile_view(array &$build, ProfileInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+function office365_calendar_profile_view(array &$build, ProfileInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
   if ($display->getComponent('office365_calendar_field')) {
     $oauth2 = \Drupal::service('office365_oauth2');
     $uid = $entity->getOwnerId();
@@ -152,7 +160,7 @@ function like_flag_profile_view(array &$build, ProfileInterface $entity, EntityV
         'eventLimit' => TRUE, // allow "more" link when too many events
         'events' => $jsglobal,
       );
-      $build['like_flag_field'] = array(
+      $build['office365_calendar_field'] = array(
         '#theme' => 'fullcalendar_calendar',
         '#calendar_id' => 'fullcalendar',
         '#calendar_settings' => $settings,

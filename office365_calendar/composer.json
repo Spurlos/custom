@@ -12,6 +12,16 @@
   },
   "require": {
     "stevenmaguire/oauth2-microsoft": "^0.2.1"
+  },
+  "extra": {
+    "patches": {
+      "drupal/real_aes": {
+        "D8 - Update module to use Defuse PHP Encryption 2.0": "https://www.drupal.org/files/issues/d8_update_module_to-2727845-11-do-not-test.patch"
+      },
+      "drupal/profile": {
+        "Limiting of profiles on a role basis works only for non-locked roles": "https://www.drupal.org/files/issues/include-locked-roles-2662112-1.patch"
+      }
+    }
   }
 }
 

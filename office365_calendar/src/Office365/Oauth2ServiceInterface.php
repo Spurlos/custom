@@ -3,7 +3,7 @@
 namespace Drupal\office365_calendar\Office365;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\encrypt\EncryptService;
 use Drupal\user\UserData;
 use League\OAuth2\Client\Token\AccessToken;
 
@@ -17,7 +17,7 @@ interface Oauth2ServiceInterface {
   /**
    * Constructor.
    */
-  public function __construct(ConfigFactory $config_factory, UserData $user_data);
+  public function __construct(ConfigFactory $config_factory, UserData $user_data, EncryptService $encrypt_service);
 
   public function authorize($uid);
 

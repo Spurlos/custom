@@ -3,10 +3,11 @@
 namespace Drupal\office365_calendar\Office365;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\encrypt\EncryptService;
+use Drupal\encrypt\Entity\EncryptionProfile;
 use Drupal\user\UserData;
 use League\OAuth2\Client\Token\AccessToken;
-use Stevenmaguire\OAuth2\Client\Provider\Microsoft;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -16,6 +17,8 @@ require_once __DIR__ . '/../../vendor/autoload.php';
  * @package Drupal\office365_calendar
  */
 class Oauth2Service implements Oauth2ServiceInterface {
+
+  use StringTranslationTrait;
 
   /**
    * Drupal\Core\Config\ConfigFactory definition.
@@ -32,18 +35,23 @@ class Oauth2Service implements Oauth2ServiceInterface {
 
   protected $provider;
 
+  protected $encryptService;
+
+  protected $config;
+
   /**
    * Constructor.
    */
-  public function __construct(ConfigFactory $config_factory, UserData $user_data) {
+  public function __construct(ConfigFactory $config_factory, UserData $user_data, EncryptService $encrypt_service) {
     $this->configFactory = $config_factory;
     $this->userData = $user_data;
+    $this->encryptService = $encrypt_service;
 
-    $config = $this->configFactory->get('office365_calendar.settings');
-    $this->provider = new Microsoft([
-      'clientId' => $config->get('client_id'),
-      'clientSecret' => $config->get('client_secret'),
-      'redirectUri' => $config->get('redirect_URI'),
+    $this->config = $this->configFactory->get('office365_calendar.settings');
+    $this->provider = new MicrosoftOath2Provider([
+      'clientId' => $this->config->get('client_id'),
+      'clientSecret' => $this->config->get('client_secret'),
+      'redirectUri' => $this->config->get('redirect_URI'),
     ]);
   }
 
@@ -61,7 +69,7 @@ class Oauth2Service implements Oauth2ServiceInterface {
     }
     elseif (empty($_GET['state']) || ($_GET['state'] !== $_SESSION['oauth2state'])) {
       unset($_SESSION['oauth2state']);
-      drupal_set_message('Invalid state. Please try again.');
+      drupal_set_message($this->t('Invalid state. Please try again.'));
       exit;
     }
     else {
@@ -95,6 +103,7 @@ class Oauth2Service implements Oauth2ServiceInterface {
   }
 
   public function saveToken($uid, AccessToken $token) {
+    $token = $this->encryptService->encrypt(serialize($token), EncryptionProfile::load($this->config->get('encryption_profile')));
     $this->userData->set('office365_calendar', $uid, 'token' , $token);
   }
 
@@ -103,7 +112,8 @@ class Oauth2Service implements Oauth2ServiceInterface {
    * @return \League\OAuth2\Client\Token\AccessToken
    */
   public function loadToken($uid) {
-    return $this->userData->get('office365_calendar', $uid, 'token');
+    $token = $this->userData->get('office365_calendar', $uid, 'token');
+    return unserialize($this->encryptService->decrypt($token, EncryptionProfile::load($this->config->get('encryption_profile'))));
   }
 
   public function deleteToken($uid) {
